@@ -1,0 +1,9 @@
+flask
+pandas
+google-generativeai
+yfinance
+openai
+groq
+gunicorn
+PyPDF2 
+python-docx

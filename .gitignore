@@ -1,0 +1,30 @@
+# Python
+*.pyc
+__pycache__/
+.Python
+venv/
+.venv/
+env/
+
+# Database
+fingpt_advisor.db
+
+# Environment Variables / Secrets
+.env
+*.env
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs and temporary files
+*.log
+tmp/
+logs/
+
+# OS generated files
+.DS_Store
+Thumbs.db

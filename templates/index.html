@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinGPT Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-start: #f8faff; 
+            --bg-end: #ffffff;   
+            --container-bg: #ffffff; 
+            --accent-color: #00aaff; 
+            --text-color: #333333; 
+            --user-bubble-bg: #e6f2ff; 
+            --ai-bubble-bg: #f0f0f0; 
+            --border-color: #e0e0e0; 
+            --glow-color: #00aaff; 
+            --shadow-color: rgba(0, 0, 0, 0.08); 
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            width: 90%;
+            max-width: 750px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--container-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+        header {
+            text-align: center;
+            padding: 25px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent-color);
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 5px rgba(0, 170, 255, 0.4);
+        }
+        header h1 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        #chat-container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+        .message-bubble {
+            padding: 15px 20px;
+            border-radius: 25px;
+            max-width: 75%;
+            word-wrap: break-word;
+            animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+            line-height: 1.6;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .user-message {
+            background-color: var(--user-bubble-bg);
+            align-self: flex-end;
+            border-bottom-right-radius: 8px;
+        }
+        .ai-message {
+            background-color: var(--ai-bubble-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 8px;
+        }
+        .loading-dots {
+            display: flex;
+            align-items: center;
+        }
+        .loading-dots span {
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            margin: 0 5px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            border-top: 1px solid var(--border-color);
+            gap: 15px;
+        }
+        .input-row {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+        }
+        .file-action-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px; 
+            width: 100%;
+        }
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; 
+        }
+        .icon-button:hover {
+            background-color: #f0f0f0;
+        }
+        .upload-icon svg {
+            color: var(--accent-color);
+        }
+        .clear-icon {
+            color: #ff3333; 
+        }
+        .clear-icon svg {
+            color: #ff3333;
+        }
+        .file-name {
+            font-style: italic;
+            color: #666666;
+            flex-grow: 1; 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #prompt-input {
+            flex-grow: 1;
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background-color: #fafafa;
+            color: var(--text-color);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            resize: vertical;
+            min-height: 50px; 
+        }
+        #prompt-input::placeholder {
+            color: #aaaaaa;
+        }
+        #prompt-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(0, 170, 255, 0.2);
+        }
+        #submit-btn {
+            padding: 18px 30px;
+            border: none;
+            border-radius: 12px;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            flex-shrink: 0;
+        }
+        #submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 170, 255, 0.3);
+            background-color: #0099e6;
+        }
+        #submit-btn:disabled {
+            background-color: #cccccc;
+            color: #888888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .error-message {
+            color: #ff3333; /* Red for errors */
+            background-color: #ffe6e6;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: center;
+            border: 1px solid #ff9999;
+        }
+        
+        #chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        #chat-container::-webkit-scrollbar-thumb {
+            background-color: #d1d1d1;
+            border-radius: 10px;
+            border: 2px solid #f1f1f1;
+        }
+        #chat-container::-webkit-scrollbar-thumb:hover {
+            background-color: #b1b1b1;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FinGPT Advisor</h1>
+        </header>
+        <div id="chat-container">
+            <div class="message-bubble ai-message">Hello! How can I help you with your finances today?</div>
+        </div>
+        <div class="input-container">
+            <div class="input-row">
+                <textarea id="prompt-input" placeholder="e.g., 'Analyze the performance of stock TSLA' or 'What insights can you derive from the attached sales data?'"></textarea>
+                <button id="submit-btn">Ask</button>
+            </div>
+            <div class="file-action-area">
+                <input type="file" id="file-upload" class="hidden" accept=".csv, .xls, .xlsx, .pdf, .doc, .docx">
+                <label for="file-upload" class="icon-button upload-icon" title="Attach File">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-paperclip">
+                        <path d="M21.44 11.02L13.02 2.6a6.36 6.36 0 0 0-9 9l8.42 8.42a6.36 6.36 0 0 0 9-9l-8.42-8.42z"></path>
+                    </svg>
+                </label>
+                <span id="file-name" class="file-name">No file chosen</span>
+                <button id="clear-file-btn" class="icon-button clear-icon" title="Clear Attached File" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x-circle">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </button>
+            </div>
+            <div id="error-message" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const promptInput = document.getElementById('prompt-input');
+            const fileUpload = document.getElementById('file-upload');
+            const fileNameSpan = document.getElementById('file-name');
+            const submitBtn = document.getElementById('submit-btn');
+            const chatContainer = document.getElementById('chat-container');
+            const errorMessageDiv = document.getElementById('error-message');
+            const clearFileBtn = document.getElementById('clear-file-btn');
+
+            fileUpload.addEventListener('change', (event) => {
+                if (event.target.files.length > 0) {
+                    fileNameSpan.textContent = event.target.files[0].name;
+                    clearFileBtn.style.display = 'flex'; 
+                } else {
+                    fileNameSpan.textContent = 'No file chosen';
+                    clearFileBtn.style.display = 'none'; 
+                }
+            });
+
+            clearFileBtn.addEventListener('click', () => {
+                fileUpload.value = ''; 
+                fileNameSpan.textContent = 'No file chosen';
+                clearFileBtn.style.display = 'none'; 
+            });
+
+            submitBtn.addEventListener('click', sendMessage);
+
+            promptInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    sendMessage();
+                }
+            });
+
+            async function sendMessage() {
+                const userPrompt = promptInput.value.trim();
+                const uploadedFile = fileUpload.files[0];
+
+                if (!userPrompt && !uploadedFile) {
+                    displayError("Please enter a prompt or attach a file.");
+                    return;
+                }
+
+                
+                displayError(""); 
+                appendMessage(userPrompt, 'user-message'); 
+                promptInput.value = ''; 
+                fileNameSpan.textContent = 'No file chosen'; 
+                fileUpload.value = ''; 
+                clearFileBtn.style.display = 'none'; 
+
+                submitBtn.disabled = true; 
+
+                const typingIndicator = addTypingIndicator(); 
+                chatContainer.appendChild(typingIndicator);
+                scrollToBottom();
+
+                const formData = new FormData();
+                formData.append('prompt', userPrompt);
+                if (uploadedFile) {
+                    formData.append('file', uploadedFile);
+                }
+
+                try {
+                    const response = await fetch('/ask_gemini', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    
+                    chatContainer.removeChild(typingIndicator);
+
+                    if (response.ok) {
+                        appendMessage(data.response, 'ai-message');
+                    } else {
+                        appendMessage(`Error: ${data.error || 'Something went wrong.'}`, 'ai-message');
+                        displayError(`Server Error: ${data.error || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    chatContainer.removeChild(typingIndicator);
+                    appendMessage('Error: Could not connect to the server.', 'ai-message');
+                    displayError('Network error or server unreachable. Please try again.');
+                } finally {
+                    submitBtn.disabled = false;
+                    scrollToBottom();
+                }
+            }
+
+            function appendMessage(text, className) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message-bubble', className);
+                messageDiv.textContent = text;
+                chatContainer.appendChild(messageDiv);
+            }
+
+            function addTypingIndicator() {
+                const indicatorDiv = document.createElement('div');
+                indicatorDiv.classList.add('message-bubble', 'ai-message', 'loading-dots');
+                indicatorDiv.innerHTML = `
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                `;
+                return indicatorDiv;
+            }
+
+            function scrollToBottom() {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function displayError(message) {
+                if (message) {
+                    errorMessageDiv.textContent = message;
+                    errorMessageDiv.style.display = 'block';
+                } else {
+                    errorMessageDiv.textContent = '';
+                    errorMessageDiv.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

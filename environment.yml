@@ -1,0 +1,15 @@
+name: fingpt-advisor
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - flask
+  - pandas
+  - pip
+  - pip:
+    - google-generativeai
+    - yfinance
+    - openai
+    - groq 
+    - PyPDF2 
+    - python-docx
