@@ -14,6 +14,10 @@ from docx import Document
 
 app = Flask(__name__)
 
+@app.route('/healthcheck')
+def healthcheck():
+    return 'OK', 200
+    
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
