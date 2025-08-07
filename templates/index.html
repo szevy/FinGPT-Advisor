@@ -297,6 +297,40 @@
                     sendMessage();
                 }
             });
+            
+            function convertMarkdownToHtml(markdownText) {
+                // Your conversion logic here
+                let htmlText = markdownText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                if (htmlText.match(/^\d\.\s/m)) {
+                    // Split the text into lines
+                    const lines = htmlText.split('\n');
+                    let listHtml = '';
+                    
+                    // Process each line that starts with a number and period
+                    for (const line of lines) {
+                        const match = line.match(/^(\d+\.\s)(.*)$/);
+                        if (match) {
+                            // Take only the text part (the second group in the regex)
+                            listHtml += `<li>${match[2]}</li>`;
+                        } else {
+                            // For lines that aren't part of the list, just add them as-is
+                            listHtml += `${line}<br>`;
+                        }
+                    }
+                    
+                    // Wrap the list items in an ordered list and remove the last <br>
+                    htmlText = `<ol>${listHtml.replace(/<br>$/,'')}</ol>`;
+                }
+                else if (htmlText.match(/^\*\s/m)) {
+                    htmlText = htmlText.replace(/^\*\s(.*)$/gm, '<li>$1</li>');
+                    htmlText = `<ul>${htmlText}</ul>`;
+                }
+
+                htmlText = htmlText.replace(/\n/g, '<br>');
+
+                return htmlText;
+            }
 
             async function sendMessage() {
                 const userPrompt = promptInput.value.trim();
@@ -357,7 +391,13 @@
             function appendMessage(text, className) {
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message-bubble', className);
-                messageDiv.textContent = text;
+                
+                // Check if the text is from the AI and should be parsed
+                if (className === 'ai-message') {
+                    messageDiv.innerHTML = convertMarkdownToHtml(text);
+                } else {
+                    messageDiv.textContent = text;
+                }
                 chatContainer.appendChild(messageDiv);
             }
 
