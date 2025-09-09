@@ -23,7 +23,7 @@ llm_clients = {}
 if GOOGLE_API_KEY:
     try:
         genai.configure(api_key=GOOGLE_API_KEY)
-        llm_clients['gemini'] = genai.GenerativeModel('gemini-1.5-pro')
+        llm_clients['gemini'] = genai.GenerativeModel('gemini-2.5-flash')
     except Exception as e:
         print(f"Failed to configure Gemini API: {e}")
 if OPENAI_API_KEY:
@@ -198,7 +198,7 @@ def get_model_response(model_name, client, full_prompt):
             return response.text
         elif model_name in ['openai', 'deepseek']:
             print(f"Calling {model_name.capitalize()}...")
-            model_to_use = "gpt-3.5-turbo" if model_name == 'openai' else "deepseek-chat"
+            model_to_use = "gpt-5-nano" if model_name == 'openai' else "deepseek-chat"
             response = client.chat.completions.create(
                 model=model_to_use,
                 messages=[{"role": "user", "content": full_prompt}]
@@ -207,7 +207,7 @@ def get_model_response(model_name, client, full_prompt):
         elif model_name == 'groq':
             print(f"Calling Groq (Llama)...")
             response = client.chat.completions.create(
-                model="llama3-8b-8192",
+                model="llama-3.1-8b-instant",
                 messages=[{"role": "user", "content": full_prompt}]
             )
             return response.choices[0].message.content
